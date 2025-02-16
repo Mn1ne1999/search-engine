@@ -1,24 +1,31 @@
 package searchengine.controllers;
 
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import searchengine.dto.statistics.StatisticsResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
+import searchengine.dto.StatisticsResponse;
+import searchengine.services.IndexingService;
 import searchengine.services.StatisticsService;
 
 @RestController
 @RequestMapping("/api")
+@RequiredArgsConstructor
 public class ApiController {
-
+    private final IndexingService indexingService;
     private final StatisticsService statisticsService;
 
-    public ApiController(StatisticsService statisticsService) {
-        this.statisticsService = statisticsService;
+    @GetMapping("/startIndexing")
+    public String startIndexing() {
+        boolean result = indexingService.startIndexing();
+        return result ? "Индексация запущено" : "Индексация не запущенно";
     }
 
+    @GetMapping("/stopIndexing")
+    public String stopIndexing() {
+        boolean result = indexingService.stopIndexing();
+        return result ? "Индексация остановленно" : "Индексация не остановлено";
+    }
     @GetMapping("/statistics")
-    public ResponseEntity<StatisticsResponse> statistics() {
-        return ResponseEntity.ok(statisticsService.getStatistics());
+    public StatisticsResponse getStatistics() {
+        return statisticsService.getStatistics();
     }
 }
