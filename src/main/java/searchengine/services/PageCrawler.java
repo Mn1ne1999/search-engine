@@ -36,7 +36,7 @@ public class PageCrawler extends RecursiveTask<Void> {
                     .referrer("http://www.google.com")
                     .get();
 
-            // ✅ Сохраняем страницу
+            // Сохраняем страницу
             Page page = new Page();
             page.setSite(site);
             page.setPath(url.replace(site.getUrl(), ""));
@@ -44,7 +44,7 @@ public class PageCrawler extends RecursiveTask<Void> {
             page.setContent(doc.html());
             pageRepository.save(page);
 
-            // ✅ Разбираем текст страницы и сохраняем леммы (как было)
+            // Разбираем текст страницы и сохраняем леммы (как было)
             String text = doc.body().text();
             Map<String, Integer> lemmas = new LemmatizationService().getLemmas(text);
 
@@ -71,7 +71,7 @@ public class PageCrawler extends RecursiveTask<Void> {
                 indexRepository.save(index);
             }
 
-            // ✅ Ищем ссылки внутри страницы и добавляем в ForkJoinPool
+            // Ищем ссылки внутри страницы и добавляем в ForkJoinPool
             List<PageCrawler> subTasks = new ArrayList<>();
             Elements links = doc.select("a[href]"); // Получаем все ссылки
 
@@ -82,7 +82,7 @@ public class PageCrawler extends RecursiveTask<Void> {
                 }
             }
 
-            // ✅ Запускаем задачи параллельно
+            // Запускаем задачи параллельно
             invokeAll(subTasks);
 
         } catch (IOException e) {
