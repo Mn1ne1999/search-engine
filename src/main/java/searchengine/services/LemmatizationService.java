@@ -2,13 +2,23 @@ package searchengine.services;
 
 import org.apache.lucene.morphology.LuceneMorphology;
 import org.apache.lucene.morphology.russian.RussianLuceneMorphology;
-import java.util.*;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class LemmatizationService {
+    @Autowired
     private final LuceneMorphology luceneMorph;
 
-    public LemmatizationService() throws Exception {
-        this.luceneMorph = new RussianLuceneMorphology();
+    public LemmatizationService() {
+        try {
+            this.luceneMorph = new RussianLuceneMorphology();
+        } catch (IOException e) {
+            throw new RuntimeException("Ошибка загрузки лемматизатора", e);
+        }
     }
 
     public Map<String, Integer> getLemmas(String text) {

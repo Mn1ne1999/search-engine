@@ -20,23 +20,22 @@ public class IndexingServiceImpl implements IndexingService {
     private final IndexRepository indexRepository;
     private final SitesList sitesList;  // Загружаем список сайтов
 
-    private ForkJoinPool forkJoinPool = new ForkJoinPool();
+    private ForkJoinPool forkJoinPool = null;
 
     @Override
-    public boolean startIndexing() {
-        // 1. Убеждаемся, что старый ForkJoinPool завершён, и создаём новый
-        if (forkJoinPool != null && !forkJoinPool.isShutdown()) {
-            forkJoinPool.shutdownNow();
+    public synchronized boolean startIndexing() {
+        // Проверяем, существует ли ForkJoinPool, если нет — создаём
+        if (forkJoinPool == null || forkJoinPool.isShutdown()) {
+            forkJoinPool = new ForkJoinPool();
         }
-        forkJoinPool = new ForkJoinPool(); // Пересоздаём пул потоков перед запуском
 
-        // 2. Удаляем старые данные (в правильном порядке)
-        indexRepository.deleteAll(); // Удаляем индексы
-        pageRepository.deleteAll();   // Удаляем страницы
-        lemmaRepository.deleteAll();  // Удаляем леммы
-        siteRepository.deleteAll();   // Удаляем сайты
+        // Очищаем базу перед индексацией
+        indexRepository.deleteAll();
+        pageRepository.deleteAll();
+        lemmaRepository.deleteAll();
+        siteRepository.deleteAll();
 
-        // 3. Запускаем индексацию заново
+        //  Запускаем обход сайтов
         for (var siteConfig : sitesList.getSites()) {
             Site site = new Site();
             site.setUrl(siteConfig.getUrl());
@@ -45,7 +44,6 @@ public class IndexingServiceImpl implements IndexingService {
             site.setStatusTime(LocalDateTime.now());
             siteRepository.save(site);
 
-            // Отправляем задачу в ForkJoinPool (обход страниц)
             forkJoinPool.execute(new PageCrawler(site, pageRepository, lemmaRepository, indexRepository, site.getUrl()));
         }
 
